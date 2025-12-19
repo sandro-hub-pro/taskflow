@@ -1,27 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TaskFlow</title>
-  <script>
-    // Single Page App GitHub Pages redirect
-    // This script redirects all 404s to the index.html with the path stored in sessionStorage
-    // The main app then reads from sessionStorage and navigates to the correct route
-    const segment = 1; // Number of path segments to keep (e.g., /taskflow = 1)
-    const path = window.location.pathname.slice(1).split('/').slice(segment).join('/');
-    const search = window.location.search;
-    const hash = window.location.hash;
-    
-    if (path || search || hash) {
-      sessionStorage.setItem('redirect', '/' + path + search + hash);
-    }
-    
-    window.location.replace('/taskflow/');
-  </script>
-</head>
-<body>
-  <p>Redirecting...</p>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/taskflow/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="TaskFlow - Modern Task Management System" />
+    <title>TaskFlow - Task Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/taskflow/assets/index-B5w_W0c3.js"></script>
+    <link rel="stylesheet" crossorigin href="/taskflow/assets/index-Cs9pNLt_.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>
-
