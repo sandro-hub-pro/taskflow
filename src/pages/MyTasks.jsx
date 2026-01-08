@@ -358,6 +358,7 @@ export function MyTasks() {
   }, [search, statusFilter, priorityFilter]);
 
   const loadTasks = async () => {
+    setLoading(true);
     try {
       const response = await taskService.getMyTasks({
         search,

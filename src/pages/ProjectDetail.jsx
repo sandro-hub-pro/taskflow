@@ -78,6 +78,7 @@ export function ProjectDetail() {
   };
 
   const loadTasks = async () => {
+    setLoading(true);
     try {
       const response = await taskService.getAll(id, {
         search,
