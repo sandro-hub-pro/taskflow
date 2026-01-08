@@ -9,6 +9,7 @@ import {
   CheckCircleIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { taskService } from '../services/api';
 import {
@@ -24,8 +25,18 @@ import {
   Button,
 } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
-import { format } from 'date-fns';
+import { format, isPast, parseISO, startOfDay } from 'date-fns';
 import toast from 'react-hot-toast';
+import { clsx } from 'clsx';
+
+// Helper to check if a task is overdue
+const isTaskOverdue = (task) => {
+  if (!task.due_date) return false;
+  if (task.status === 'completed' || task.status === 'cancelled') return false;
+  const dueDate = startOfDay(parseISO(task.due_date));
+  const today = startOfDay(new Date());
+  return isPast(dueDate) && dueDate < today;
+};
 
 // Color assignments for team members
 const ASSIGNEE_COLORS = [
@@ -123,6 +134,12 @@ function TaskRow({ task, user, onUpdate, updating }) {
                   Accepted
                 </Badge>
               )}
+              {isTaskOverdue(task) && (
+                <Badge variant="danger" size="sm">
+                  <ExclamationTriangleIcon className="w-3 h-3 mr-1" />
+                  Overdue
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-4 text-xs text-surface-500 dark:text-surface-400">
               <Link
@@ -134,7 +151,10 @@ function TaskRow({ task, user, onUpdate, updating }) {
                 {task.project?.name}
               </Link>
               {task.due_date && (
-                <span className="flex items-center gap-1">
+                <span className={clsx(
+                  "flex items-center gap-1",
+                  isTaskOverdue(task) && "text-red-500 dark:text-red-400 font-medium"
+                )}>
                   <CalendarIcon className="w-3.5 h-3.5" />
                   {format(new Date(task.due_date), 'MMM d, yyyy')}
                 </span>
