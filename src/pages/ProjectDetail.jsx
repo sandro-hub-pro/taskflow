@@ -268,6 +268,8 @@ export function ProjectDetail() {
                 { value: 'in_progress', label: 'In Progress' },
                 { value: 'under_review', label: 'Under Review' },
                 { value: 'completed', label: 'Completed' },
+                { value: 'overdue', label: 'Overdue' },
+                { value: 'accepted', label: 'Accepted' },
               ]}
               containerClassName="w-36"
             />
