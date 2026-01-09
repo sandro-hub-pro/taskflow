@@ -99,12 +99,16 @@ function CompactTeamProgress({ assignees, currentUserId }) {
 function TaskRow({ task, user, onUpdate, updating }) {
   const [expanded, setExpanded] = useState(false);
   const isAccepted = task.is_accepted || task.accepted_at;
+  const isCancelled = task.status === 'cancelled';
+  const canEdit = !isAccepted && !isCancelled;
   
   const handleProgressChange = (progress) => {
+    if (!canEdit) return;
     onUpdate(task, progress, undefined);
   };
   
   const handleStatusChange = (status) => {
+    if (!canEdit) return;
     onUpdate(task, undefined, status);
   };
 
@@ -272,6 +276,11 @@ function TaskRow({ task, user, onUpdate, updating }) {
                   <LockClosedIcon className="w-5 h-5" />
                   <span className="text-sm">Task accepted - no further changes allowed</span>
                 </div>
+              ) : isCancelled ? (
+                <div className="flex items-center gap-2 p-4 bg-surface-100 dark:bg-surface-800 rounded-lg text-surface-500 dark:text-surface-400">
+                  <LockClosedIcon className="w-5 h-5" />
+                  <span className="text-sm">Task cancelled - no further changes allowed</span>
+                </div>
               ) : (
                 <div className="space-y-4 relative">
                   {/* Loading Overlay */}
@@ -299,8 +308,8 @@ function TaskRow({ task, user, onUpdate, updating }) {
                       step="5"
                       value={task.my_progress ?? 0}
                       onChange={(e) => handleProgressChange(Number(e.target.value))}
-                      disabled={updating}
-                      className={`w-full h-2 accent-primary-500 ${updating ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+                      disabled={updating || !canEdit}
+                      className={`w-full h-2 accent-primary-500 ${(updating || !canEdit) ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
                     />
                     <div className="flex justify-between text-xs text-surface-400 mt-1">
                       <span>0%</span>
@@ -326,7 +335,7 @@ function TaskRow({ task, user, onUpdate, updating }) {
                         { value: 'under_review', label: 'Under Review' },
                         { value: 'completed', label: 'Completed' },
                       ]}
-                      disabled={updating}
+                      disabled={updating || !canEdit}
                       containerClassName="w-full"
                     />
                   </div>

@@ -644,7 +644,8 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
 
   const isAssignee = task?.assignees?.some((a) => a.id === user?.id);
   const isAccepted = task?.is_accepted || task?.accepted_at;
-  const canUpdateProgress = (canManage || isAssignee) && !isAccepted;
+  const isCancelled = task?.status === 'cancelled';
+  const canUpdateProgress = (canManage || isAssignee) && !isAccepted && !isCancelled;
   const assigneeCount = task?.assignees?.length || 1;
   
   // Calculate overall progress from all assignees
@@ -924,6 +925,18 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
           </div>
         )}
 
+        {/* Locked message when task is cancelled */}
+        {isCancelled && isAssignee && (
+          <div className="p-4 bg-surface-100 dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700">
+            <div className="flex items-center gap-3 text-surface-500 dark:text-surface-400">
+              <LockClosedIcon className="w-5 h-5" />
+              <span className="text-sm">
+                This task has been cancelled and can no longer be modified.
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Progress Update for current user (assignee only, not manager) */}
         {canUpdateProgress && isAssignee && !canManage && (
           <div className="space-y-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-xl border border-primary-200 dark:border-primary-800">
@@ -937,7 +950,8 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
                 max="100"
                 value={myProgress}
                 onChange={(e) => setMyProgress(Number(e.target.value))}
-                className="flex-1 accent-primary-500"
+                disabled={!canUpdateProgress}
+                className={`flex-1 accent-primary-500 ${!canUpdateProgress ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               <span className="text-sm font-bold w-12 text-right text-primary-600 dark:text-primary-400">
                 {myProgress}%
@@ -953,9 +967,10 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
                   { value: 'under_review', label: 'Under Review' },
                   { value: 'completed', label: 'Completed' },
                 ]}
+                disabled={!canUpdateProgress}
                 containerClassName="flex-1"
               />
-              <Button onClick={handleUpdateProgress} loading={loading}>
+              <Button onClick={handleUpdateProgress} loading={loading} disabled={!canUpdateProgress}>
                 Update
               </Button>
             </div>
@@ -978,7 +993,8 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
                 max="100"
                 value={myProgress}
                 onChange={(e) => setMyProgress(Number(e.target.value))}
-                className="flex-1 accent-primary-500"
+                disabled={!canUpdateProgress}
+                className={`flex-1 accent-primary-500 ${!canUpdateProgress ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               <span className="text-sm font-bold w-12 text-right text-primary-600 dark:text-primary-400">
                 {myProgress}%
@@ -994,9 +1010,10 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
                   { value: 'under_review', label: 'Under Review' },
                   { value: 'completed', label: 'Completed' },
                 ]}
+                disabled={!canUpdateProgress}
                 containerClassName="flex-1"
               />
-              <Button onClick={handleUpdateProgress} loading={loading}>
+              <Button onClick={handleUpdateProgress} loading={loading} disabled={!canUpdateProgress}>
                 Update
               </Button>
             </div>
