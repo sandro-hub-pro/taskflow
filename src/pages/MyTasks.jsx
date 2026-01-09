@@ -109,7 +109,12 @@ function TaskRow({ task, user, onUpdate, updating }) {
   
   const handleStatusChange = (status) => {
     if (!canEdit) return;
-    onUpdate(task, undefined, status);
+    // If status is set to pending, automatically set progress to 0
+    if (status === 'pending') {
+      onUpdate(task, 0, status);
+    } else {
+      onUpdate(task, undefined, status);
+    }
   };
 
   return (

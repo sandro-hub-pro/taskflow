@@ -379,20 +379,30 @@ export function ProjectDetail() {
                         >
                           <MenuItems className="absolute right-0 mt-2 w-40 origin-top-right rounded-xl bg-white dark:bg-surface-800 shadow-lg ring-1 ring-black/5 dark:ring-white/5 focus:outline-none p-1 z-10">
                             <MenuItem>
-                              {({ active }) => (
-                                <button
-                                  onClick={() => {
-                                    setEditingTask(task);
-                                    setIsTaskModalOpen(true);
-                                  }}
-                                  className={clsx(
-                                    'flex w-full items-center px-3 py-2 text-sm rounded-lg',
-                                    active && 'bg-surface-100 dark:bg-surface-700'
-                                  )}
-                                >
-                                  Edit
-                                </button>
-                              )}
+                              {({ active }) => {
+                                const isAccepted = task.is_accepted || task.accepted_at;
+                                const isCancelled = task.status === 'cancelled';
+                                const canEdit = !isAccepted && !isCancelled;
+                                
+                                return (
+                                  <button
+                                    onClick={() => {
+                                      if (canEdit) {
+                                        setEditingTask(task);
+                                        setIsTaskModalOpen(true);
+                                      }
+                                    }}
+                                    disabled={!canEdit}
+                                    className={clsx(
+                                      'flex w-full items-center px-3 py-2 text-sm rounded-lg',
+                                      active && canEdit && 'bg-surface-100 dark:bg-surface-700',
+                                      !canEdit && 'opacity-50 cursor-not-allowed'
+                                    )}
+                                  >
+                                    Edit
+                                  </button>
+                                );
+                              }}
                             </MenuItem>
                             <MenuItem>
                               {({ active }) => (
@@ -472,12 +482,23 @@ function TaskModal({ isOpen, onClose, projectId, task, projectUsers, canManage, 
 
   useEffect(() => {
     if (task) {
+      // Convert ISO date to YYYY-MM-DD format for HTML date input
+      let formattedDueDate = '';
+      if (task.due_date) {
+        try {
+          formattedDueDate = format(parseISO(task.due_date), 'yyyy-MM-dd');
+        } catch (e) {
+          // If parsing fails, try direct date parsing
+          formattedDueDate = format(new Date(task.due_date), 'yyyy-MM-dd');
+        }
+      }
+      
       setFormData({
         title: task.title || '',
         description: task.description || '',
         status: task.status || 'pending',
         priority: task.priority || 'medium',
-        due_date: task.due_date || '',
+        due_date: formattedDueDate,
         assignees: task.assignees?.map((a) => a.id) || [],
       });
     } else {
@@ -712,7 +733,9 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
       await taskService.addComment(projectId, task.id, comment);
       setComment('');
       toast.success('Comment added');
-      onUpdate();
+      // Fetch the updated task with comments and pass it to onUpdate
+      const response = await taskService.getOne(projectId, task.id);
+      onUpdate(response.data);
     } catch (error) {
       toast.error('Failed to add comment');
     }
@@ -960,7 +983,14 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
             <div className="flex items-center gap-4">
               <Select
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                onChange={(e) => {
+                  const newStatus = e.target.value;
+                  setStatus(newStatus);
+                  // If status is set to pending, automatically set progress to 0
+                  if (newStatus === 'pending') {
+                    setMyProgress(0);
+                  }
+                }}
                 options={[
                   { value: 'pending', label: 'Pending' },
                   { value: 'in_progress', label: 'In Progress' },
@@ -1003,7 +1033,14 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
             <div className="flex items-center gap-4">
               <Select
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                onChange={(e) => {
+                  const newStatus = e.target.value;
+                  setStatus(newStatus);
+                  // If status is set to pending, automatically set progress to 0
+                  if (newStatus === 'pending') {
+                    setMyProgress(0);
+                  }
+                }}
                 options={[
                   { value: 'pending', label: 'Pending' },
                   { value: 'in_progress', label: 'In Progress' },
@@ -1020,8 +1057,32 @@ function TaskDetailModal({ isOpen, onClose, projectId, task, projectUsers, canMa
           </div>
         )}
 
+        {/* Locked message for managers when task is accepted */}
+        {canManage && !isAssignee && isAccepted && (
+          <div className="p-4 bg-surface-50 dark:bg-surface-800/50 rounded-xl border border-surface-200 dark:border-surface-700">
+            <div className="flex items-center gap-2 text-surface-600 dark:text-surface-400">
+              <LockClosedIcon className="w-5 h-5" />
+              <p className="text-sm">
+                This task has been accepted and can no longer be modified.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Locked message for managers when task is cancelled */}
+        {canManage && !isAssignee && isCancelled && (
+          <div className="p-4 bg-surface-50 dark:bg-surface-800/50 rounded-xl border border-surface-200 dark:border-surface-700">
+            <div className="flex items-center gap-2 text-surface-600 dark:text-surface-400">
+              <LockClosedIcon className="w-5 h-5" />
+              <p className="text-sm">
+                This task has been cancelled and can no longer be modified.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Progress Update for managers (when not an assignee) */}
-        {canManage && !isAssignee && !isAccepted && (
+        {canManage && !isAssignee && !isAccepted && !isCancelled && (
           <div className="space-y-4 p-4 bg-surface-50 dark:bg-surface-800/50 rounded-xl">
             <h4 className="text-sm font-medium text-surface-700 dark:text-surface-300">
               Update Task Status
